@@ -1,38 +1,66 @@
-let root;
-const nodeSize = 30;
-const levelHeight = 100;
-const horizontalSpacing = 80;
+let root, nodeCount = 0;
+const nodeSize = 50; // Increased node size for better visibility
+const levelHeight = 200; // Vertical spacing between levels
+const baseSpacing = 150; // Base horizontal spacing between nodes
+const addButtonSize = 20; // Size of the add button
+const deleteButtonSize = 20; // Size of the delete button
+const fontSize = 14; // Font size for node labels
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  root = new Node(width / 2, 100, nodeSize, null, 0);
+  root = new Node(width / 2, levelHeight, nodeSize, null, 0, `Node ${nodeCount++}`);
 }
 
 function draw() {
   background(255);
-  root.drawConnections();
-  root.drawNode();
+  if (root) {
+    root.drawConnections();
+    root.drawNode();
+  }
 }
 
 function mousePressed() {
-  root.clicked(mouseX, mouseY);
-  root.reposition(root.x, 0);
+  if (root) {
+    let deleteResult = root.clicked(mouseX, mouseY);
+    if (deleteResult) {
+      if (deleteResult !== 'deleteRoot') {
+        root.updateSpacing(); // Update the entire tree's layout
+      } else {
+        root = null;
+      }
+    }
+  }
 }
 
 class Node {
-  constructor(x, y, r, parent, depth) {
+  constructor(x, y, r, parent, depth, label) {
     this.x = x;
     this.y = y;
     this.r = r;
     this.parent = parent;
     this.children = [];
     this.depth = depth;
+    this.label = label;
   }
 
   drawNode() {
     fill(100, 100, 250);
-    noStroke();
     ellipse(this.x, this.y, this.r * 2);
+    fill(0);
+    textSize(fontSize);
+    textAlign(CENTER, CENTER);
+    text(this.label, this.x, this.y);
+
+    fill(0, 255, 0);
+    ellipse(this.x + this.r, this.y, addButtonSize);
+    fill(0);
+    text("+", this.x + this.r, this.y);
+
+    fill(255, 0, 0);
+    ellipse(this.x - this.r, this.y, deleteButtonSize);
+    fill(255);
+    text("x", this.x - this.r, this.y);
+
     this.children.forEach(child => child.drawNode());
   }
 
@@ -46,18 +74,54 @@ class Node {
   }
 
   clicked(px, py) {
-    if (dist(px, py, this.x, this.y) < this.r) {
-      let child = new Node(this.x, this.y + levelHeight, this.r, this, this.depth + 1);
+    if (dist(px, py, this.x + this.r, this.y) < addButtonSize / 2) {
+      let child = new Node(this.x, this.y + levelHeight, nodeSize, this, this.depth + 1, `Node ${nodeCount++}`);
       this.children.push(child);
-    } else {
-      this.children.forEach(child => child.clicked(px, py));
+      return true;
     }
+
+    if (dist(px, py, this.x - this.r, this.y) < deleteButtonSize / 2) {
+      if (this.parent) {
+        let index = this.parent.children.indexOf(this);
+        this.parent.children.splice(index, 1);
+        return true;
+      } else {
+        return 'deleteRoot';
+      }
+    }
+
+    for (let child of this.children) {
+      let childClicked = child.clicked(px, py);
+      if (childClicked) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
-  reposition(x, siblingCount) {
-    this.x = x;
-    this.children.forEach((child, index) => {
-      child.reposition(x - horizontalSpacing * (this.children.length - 1) / 2 + horizontalSpacing * index, this.children.length);
+  updateSpacing() {
+    let totalWidth = this.calculateSubtreeWidth();
+    this.repositionChildren(this.x - totalWidth / 2, 0);
+  }
+
+  calculateSubtreeWidth() {
+    if (this.children.length === 0) {
+      return baseSpacing;
+    }
+    let totalWidth = 0;
+    this.children.forEach(child => {
+      totalWidth += child.calculateSubtreeWidth();
+    });
+    return totalWidth;
+  }
+
+  repositionChildren(x, accumulatedWidth) {
+    this.children.forEach(child => {
+      let childWidth = child.calculateSubtreeWidth();
+      child.x = x + accumulatedWidth + childWidth / 2;
+      child.repositionChildren(child.x - childWidth / 2, 0);
+      accumulatedWidth += childWidth;
     });
   }
 }
