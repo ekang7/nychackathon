@@ -1,66 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title></title>
-    <link rel="stylesheet" href="/style.css" />
-  </head>
-  <body>
-    <!-- Dropdown Menu for Pre-Made Prompts -->
-    <select id="premadePrompts">
-      <option value="">Select a prompt...</option>
-      <!-- Add more pre-made prompts as needed -->
-    </select>
-
-    <!-- Input for Custom Messages -->
-    <input
-      type="text"
-      id="userInput"
-      placeholder="Type your custom message..."
-    />
-    <button onclick="sendMessage()">Send</button>
-
-    <div id="chatbox"></div>
-
-    <script>
-      async function sendMessage() {
-        // Get user input or selected prompt
-        const inputField = document.getElementById("userInput");
-        const promptSelect = document.getElementById("premadePrompts");
-        const userText = inputField.value || promptSelect.value;
-
-        // Reset fields
-        inputField.value = "";
-        promptSelect.selectedIndex = 0;
-
-        document.getElementById(
-          "chatbox"
-        ).innerHTML += `<div>User: ${userText}</div>`;
-
-        try {
-          const response = await fetch("/get-response", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ message: userText }),
-          });
-
-          if (!response.ok) {
-            throw new Error(`Server responded with status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          document.getElementById(
-            "chatbox"
-          ).innerHTML += `<div>AI: ${data.answer}</div>`;
-        } catch (error) {
-          console.error("Fetch error:", error.message);
-          document.getElementById(
-            "chatbox"
-          ).innerHTML += `<div>Error: ${error.message}</div>`;
-        }
-      }
-    </script>
-  </body>
+<html>
+<head>
+    <title>Interactive Tree Map with Curved Arrows</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+</body>
 </html>

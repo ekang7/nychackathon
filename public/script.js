@@ -1,36 +1,63 @@
-async function sendMessage() {
-  const inputField = document.getElementById("userInput");
-  const userText = inputField.value;
-  inputField.value = "";
+let root;
+const nodeSize = 30;
+const levelHeight = 100;
+const horizontalSpacing = 80;
 
-  // Display user's message
-  document.getElementById(
-    "chatbox"
-  ).innerHTML += `<div>User: ${userText}</div>`;
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  root = new Node(width / 2, 100, nodeSize, null, 0);
+}
 
-  try {
-    const response = await fetch("/get-response", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: userText }),
-    });
+function draw() {
+  background(255);
+  root.drawConnections();
+  root.drawNode();
+}
 
-    if (!response.ok) {
-      throw new Error(`Server responded with status: ${response.status}`);
+function mousePressed() {
+  root.clicked(mouseX, mouseY);
+  root.reposition(root.x, 0);
+}
+
+class Node {
+  constructor(x, y, r, parent, depth) {
+    this.x = x;
+    this.y = y;
+    this.r = r;
+    this.parent = parent;
+    this.children = [];
+    this.depth = depth;
+  }
+
+  drawNode() {
+    fill(100, 100, 250);
+    noStroke();
+    ellipse(this.x, this.y, this.r * 2);
+    this.children.forEach(child => child.drawNode());
+  }
+
+  drawConnections() {
+    if (this.parent) {
+      stroke(0);
+      noFill();
+      bezier(this.parent.x, this.parent.y, (this.x + this.parent.x) / 2, this.parent.y, this.x, (this.y + this.parent.y) / 2, this.x, this.y);
     }
+    this.children.forEach(child => child.drawConnections());
+  }
 
-    const data = await response.json();
+  clicked(px, py) {
+    if (dist(px, py, this.x, this.y) < this.r) {
+      let child = new Node(this.x, this.y + levelHeight, this.r, this, this.depth + 1);
+      this.children.push(child);
+    } else {
+      this.children.forEach(child => child.clicked(px, py));
+    }
+  }
 
-    // Display AI's response and change door back to normal
-    document.getElementById(
-      "chatbox"
-    ).innerHTML += `<div>AI: ${data.answer}</div>`;
-  } catch (error) {
-    console.error("Fetch error:", error.message);
-    document.getElementById(
-      "chatbox"
-    ).innerHTML += `<div>Error: ${error.message}</div>`;
+  reposition(x, siblingCount) {
+    this.x = x;
+    this.children.forEach((child, index) => {
+      child.reposition(x - horizontalSpacing * (this.children.length - 1) / 2 + horizontalSpacing * index, this.children.length);
+    });
   }
 }
