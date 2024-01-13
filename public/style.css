@@ -1,0 +1,21 @@
+#door {
+    text-align: center;
+    font-size: 10vw;
+} 
+#chatbox {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+    height: 300px;
+    overflow-y: scroll;
+}
+#userInput {
+    width: 80%;
+    padding: 10px;
+}
+button {
+    padding: 10px 15px;
+}
+h1 {
+    text-align: center;
+}
