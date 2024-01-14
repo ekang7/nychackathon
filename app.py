@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, send_file
 import os
 import openai
 import requests
@@ -11,13 +11,28 @@ client = OpenAI(api_key = api_key)
 
 openai.api_key = api_key
 
+# Serve the index.html file from the 'public' folder
+@app.route('/', methods=['GET'])
+def serve_index():
+    return send_file('public/index.html')
+
+# Serve the style.css file from the 'public' folder
+@app.route('/style.css')
+def serve_css():
+    return send_from_directory('public', 'style.css')
+
+# Serve the script.js file from the 'public' folder
+@app.route('/script.js')
+def serve_js():
+    return send_from_directory('public', 'script.js')
+
 @app.route('/new_node', methods=['POST'])
 def new_node():
     if request.is_json:
         data = request.get_json()
         root = data.get('root', '')
         existing_nodes = data.get('existingNodes', '')
-        prompt = "What is a subconcept for " + root + " that is not one of " + existing_nodes + "? Just give the concise name of the subconcept."
+        prompt = "What is a subconcept for " + root + " that is not one of " + existing_nodes + "? Just give the 1-word concise name of the subconcept."
         node = chat_with_gpt(prompt)
         return jsonify({"newNode": node}), 200
     else:
@@ -28,7 +43,7 @@ def get_description():
     if request.is_json:
         data = request.get_json()
         root = data.get('root', '')
-        node = data.get('nodes', '')
+        node = data.get('node', '')
         prompt = "What is a concise description for " + node + " related " + root + "? Give no more than 3 sentences and list 2 resources/links."
         description = chat_with_gpt(prompt)
         return jsonify({"description": description}), 200
